@@ -1,0 +1,49 @@
+# Syllaboom
+
+> Turn your syllabus into a complete study system in 90 seconds.
+
+## What is Syllaboom?
+
+Syllaboom is an AI-powered tool that transforms any college or university syllabus PDF into a comprehensive study system. Students upload their syllabus and receive:
+
+- **Smart Calendar**: All deadlines, exams, and class meetings exported to Google Calendar/iCal
+- **Grade Calculator**: Track assignments, see current grade, calculate what's needed on finals
+- **Week-by-Week Battle Plan**: Strategic study schedule with danger zones flagged
+- **Flashcards**: Key terms and concepts for each topic
+- **Practice Questions**: Self-assessment questions for exam prep
+
+## Pricing
+
+- Single Class: $3 (one-time)
+- Semester Pack: $8 (up to 6 classes)
+
+## How It Works
+
+1. Upload your syllabus PDF
+2. AI extracts dates, grading weights, topics, and policies
+3. Receive your complete study system in ~90 seconds
+
+## Privacy
+
+- No user accounts required
+- Syllabus data is processed and immediately discarded
+- Results stored only in the user's browser (localStorage)
+- No data is retained on servers
+
+## Contact
+
+- Email: hello@syllaboom.com
+- Website: https://syllaboom.com
+
+## Technical Details
+
+- Supports any text-based PDF syllabus
+- Works for any class at any school
+- Calendar export compatible with Google Calendar, Apple Calendar, Outlook
+- Grade data exportable as CSV
+
+## Target Users
+
+- College and university students
+- Students who want to plan their semester strategically
+- Students who need help tracking assignments and grades
