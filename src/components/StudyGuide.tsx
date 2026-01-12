@@ -84,8 +84,16 @@ export default function StudyGuide({ guide, isPreview = false }: StudyGuideProps
   }, [calculatedGrade]);
 
   const handleGradeChange = (key: string, value: string) => {
-    const numValue = value === '' ? null : Math.min(100, Math.max(0, parseFloat(value) || 0));
-    setGrades(prev => ({ ...prev, [key]: numValue }));
+    if (value === '') {
+      setGrades(prev => ({ ...prev, [key]: null }));
+      return;
+    }
+    const parsed = parseFloat(value);
+    // Only update if it's a valid number
+    if (!isNaN(parsed)) {
+      const numValue = Math.min(100, Math.max(0, parsed));
+      setGrades(prev => ({ ...prev, [key]: numValue }));
+    }
   };
 
   const getGradeColor = (grade: number | null) => {
@@ -673,24 +681,24 @@ END:VEVENT\r
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12 max-w-5xl">
         {/* Success Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
+          className="text-center mb-8"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2 }}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 ${
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-4 text-sm font-medium ${
               isPreview
                 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                 : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
             }`}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             {isPreview ? 'Example Study Guide' : 'Study Guide Ready!'}
@@ -702,14 +710,14 @@ END:VEVENT\r
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="flex flex-wrap justify-center gap-4 mb-6"
+          className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-8"
         >
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
-            <span className="text-2xl font-bold text-indigo-400">{stats.deadlines}</span>
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10">
+            <span className="text-2xl sm:text-3xl font-bold text-indigo-400">{stats.deadlines}</span>
             <span className="text-gray-400 text-sm">deadlines tracked</span>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
-            <span className="text-2xl font-bold text-emerald-400">{stats.assignments}</span>
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10">
+            <span className="text-2xl sm:text-3xl font-bold text-emerald-400">{stats.assignments}</span>
             <span className="text-gray-400 text-sm">assignments tracked</span>
           </div>
         </motion.div>
@@ -719,21 +727,21 @@ END:VEVENT\r
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass rounded-3xl p-8 mb-6 border border-white/5 overflow-hidden relative"
+          className="glass rounded-3xl p-6 sm:p-8 mb-8 border border-white/5 overflow-hidden relative"
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500" />
 
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
                 <span className="text-indigo-400">{guide.courseCode}</span>
-                <span className="text-gray-400 mx-2">•</span>
+                <span className="text-gray-500 mx-2">•</span>
                 <span className="text-white">{guide.courseName}</span>
               </h1>
-              <p className="text-gray-400 mb-2">{guide.instructor}</p>
+              <p className="text-gray-400 text-base">{guide.instructor}</p>
               {guide.meetingTimes && (
                 <p className="text-sm text-gray-500 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {guide.meetingTimes}
@@ -742,16 +750,16 @@ END:VEVENT\r
             </div>
             <div className="flex flex-wrap gap-2">
               {guide.semesterStrategy?.weeklyTimeCommitment && (
-                <div className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                  <span className="text-indigo-400 font-semibold">{guide.semesterStrategy.weeklyTimeCommitment.normal}h</span>
-                  <span className="text-gray-500 text-sm">/week avg</span>
+                <div className="px-5 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                  <span className="text-indigo-400 font-bold text-lg">{guide.semesterStrategy.weeklyTimeCommitment.normal}h</span>
+                  <span className="text-gray-500 text-sm ml-1">/week avg</span>
                 </div>
               )}
             </div>
           </div>
 
           {guide.courseOverview?.oneSentence && (
-            <p className="mt-4 text-gray-300 text-lg leading-relaxed">
+            <p className="mt-5 text-gray-300 text-base sm:text-lg leading-relaxed">
               {guide.courseOverview.oneSentence}
             </p>
           )}
@@ -792,35 +800,26 @@ END:VEVENT\r
         </AnimatePresence>
 
         {/* Tabs */}
-        <div className="mb-6 overflow-x-auto pb-2 -mx-4 px-4">
-          <div className="flex gap-2 min-w-max">
+        <div className="mb-8 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6">
+          <div className="flex gap-1.5 sm:gap-2 min-w-max">
             {tabs.map((tab) => {
               const isLocked = isPreview && tab.id !== 'overview' && tab.id !== 'roadmap';
               return (
-                <motion.button
+                <button
                   key={tab.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                   onClick={() => !isLocked && setActiveTab(tab.id)}
-                  className={`relative px-5 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
+                  className={`relative px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium transition-all flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base ${
                     activeTab === tab.id
-                      ? 'bg-white/10 text-white'
+                      ? 'bg-white/10 text-white border border-white/10'
                       : isLocked
                         ? 'text-gray-600 cursor-not-allowed'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <span className={isLocked ? 'opacity-50' : ''}>{tab.icon}</span>
+                  <span className={`text-base sm:text-lg ${isLocked ? 'opacity-50' : ''}`}>{tab.icon}</span>
                   <span className={isLocked ? 'opacity-50' : ''}>{tab.label}</span>
-                  {isLocked && <span className="text-xs ml-1">🔒</span>}
-                  {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="tab-indicator"
-                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/20 to-violet-500/20 border border-indigo-500/30"
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
+                  {isLocked && <span className="text-xs">🔒</span>}
+                </button>
               );
             })}
           </div>
@@ -834,7 +833,7 @@ END:VEVENT\r
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="glass rounded-3xl p-6 md:p-8 border border-white/5"
+            className="glass rounded-3xl p-5 sm:p-6 md:p-8 border border-white/5"
           >
             {/* Overview Tab */}
             {activeTab === 'overview' && (

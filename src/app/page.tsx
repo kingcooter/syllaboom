@@ -29,14 +29,27 @@ export default function Home() {
     localStorage.setItem('pendingSyllabus', syllabusText);
     localStorage.setItem('pendingFilename', filename || 'syllabus.pdf');
 
-    const response = await fetch('/api/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceType, email }),
-    });
+    try {
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceType, email }),
+      });
 
-    const { url } = await response.json();
-    window.location.href = url;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Checkout failed');
+      }
+
+      const data = await response.json();
+      if (!data.url) {
+        throw new Error('Invalid checkout response');
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Failed to start checkout. Please try again.');
+    }
   };
 
   const handlePriceChange = (type: 'single' | 'semester') => {
@@ -57,26 +70,26 @@ export default function Home() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
       </div>
 
-      <main className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
+      <main className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 max-w-6xl">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-block mb-6"
+            className="inline-block mb-8"
           >
-            <span className="px-4 py-2 rounded-full text-sm font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 tracking-wide">
               AI-Powered Study System
             </span>
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-8 tracking-tight leading-[1.1]">
             <span className="bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">
               Drop your syllabus.
             </span>
@@ -86,34 +99,37 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Turn any syllabus into a complete study system in 90 seconds.
           </p>
 
           {/* Value Props - Above the Fold */}
-          <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-8 max-w-3xl mx-auto">
             {[
-              { icon: '📅', text: 'Export to Google/Apple Calendar' },
-              { icon: '📊', text: 'Grade calculator → Excel/Sheets' },
-              { icon: '⚔️', text: 'Week-by-week battle plan' },
-              { icon: '⚠️', text: 'Danger zone alerts' },
-              { icon: '🎯', text: 'Exam strategy guides' },
+              { icon: '📅', text: 'Calendar Export' },
+              { icon: '📊', text: 'Grade Calculator' },
+              { icon: '⚔️', text: 'Battle Plan' },
+              { icon: '⚠️', text: 'Danger Alerts' },
+              { icon: '🎯', text: 'Exam Strategy' },
             ].map((item, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-300"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-white/[0.03] border border-white/10 text-gray-300 hover:bg-white/[0.06] transition-colors"
               >
-                <span>{item.icon}</span>
-                {item.text}
+                <span className="text-base">{item.icon}</span>
+                <span className="font-medium">{item.text}</span>
               </span>
             ))}
           </div>
 
           <a
             href="/results?preview=true"
-            className="inline-block text-indigo-400 hover:text-indigo-300 transition-colors text-sm underline underline-offset-4"
+            className="inline-flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 transition-colors text-sm font-medium"
           >
-            See a full example →
+            See a full example
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </a>
         </motion.div>
 
@@ -122,9 +138,9 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="max-w-2xl mx-auto"
+          className="max-w-xl mx-auto"
         >
-          <div className="glass rounded-3xl p-8 border border-white/5 shadow-2xl">
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-10 border border-white/5 shadow-2xl">
             {/* File Upload */}
             <FileUpload onFileProcessed={handleFileProcessed} />
 
@@ -214,10 +230,12 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-24 text-center"
+          className="mt-32 md:mt-40 text-center"
         >
-          <h2 className="text-3xl font-bold mb-4">Everything you need to ace your class</h2>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5 tracking-tight">
+            Everything you need to ace your class
+          </h2>
+          <p className="text-gray-400 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">
             One upload. Complete study system. Exported to your favorite tools.
           </p>
         </motion.div>
@@ -227,41 +245,41 @@ export default function Home() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6"
         >
           {[
             {
               icon: '📅',
-              title: 'Export to Google & Apple Calendar',
-              description: 'One click to add every exam, assignment, and deadline to your calendar. Works with Google Calendar, Apple Calendar, and Outlook. Reminders included.',
+              title: 'Calendar Export',
+              description: 'Add every exam, assignment, and deadline to Google Calendar, Apple Calendar, or Outlook with one click.',
               highlight: '.ics file — works everywhere',
               color: 'from-blue-500/20 to-cyan-500/20',
             },
             {
               icon: '📊',
-              title: 'Live Grade Calculator',
-              description: 'Enter grades as you go. See your weighted average update in real-time. Know exactly what you need on the final.',
+              title: 'Grade Calculator',
+              description: 'Enter grades as you go. See your weighted average update in real-time. Know what you need on the final.',
               highlight: 'Export to Excel/Sheets',
               color: 'from-emerald-500/20 to-teal-500/20',
             },
             {
               icon: '⚔️',
-              title: 'Week-by-Week Battle Plan',
-              description: 'Your entire semester mapped out. Topics, readings, and assignments organized by week. Study hours calculated.',
+              title: 'Battle Plan',
+              description: 'Your semester mapped out week by week. Topics, readings, and assignments organized with study hours calculated.',
               highlight: 'Stay ahead of the game',
               color: 'from-violet-500/20 to-purple-500/20',
             },
             {
               icon: '⚠️',
-              title: 'Danger Zone Alerts',
-              description: 'AI identifies the hardest weeks—when exams overlap, papers are due, and workload peaks. Plan ahead or crash and burn.',
+              title: 'Danger Alerts',
+              description: 'AI identifies the hardest weeks—when exams overlap, papers pile up, and workload peaks.',
               highlight: 'Be warned in advance',
               color: 'from-red-500/20 to-orange-500/20',
             },
             {
               icon: '🎯',
-              title: 'Exam Strategy Guide',
-              description: 'For each exam: high-yield topics, study timeline, and prep phases. Know what to focus on and when to start.',
+              title: 'Exam Strategy',
+              description: 'For each exam: high-yield topics, study timeline, and prep phases. Know what to focus on.',
               highlight: 'Targeted prep',
               color: 'from-pink-500/20 to-rose-500/20',
             },
@@ -271,14 +289,14 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 + i * 0.05 }}
-              className="card-hover p-6 rounded-2xl bg-white/[0.02] border border-white/5 group"
+              className="card-hover p-5 sm:p-6 rounded-2xl bg-white/[0.02] border border-white/5 group"
             >
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-xl sm:text-2xl mb-4 group-hover:scale-105 transition-transform`}>
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed mb-3">{feature.description}</p>
-              <span className="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-full">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 text-white">{feature.title}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-4">{feature.description}</p>
+              <span className="inline-block text-xs font-medium text-indigo-400 bg-indigo-500/10 px-3 py-1.5 rounded-full">
                 {feature.highlight}
               </span>
             </motion.div>
@@ -290,21 +308,21 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-24"
+          className="mt-32 md:mt-40"
         >
-          <h2 className="text-2xl font-bold text-center mb-12">How it works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-14 tracking-tight">How it works</h2>
+          <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-12 max-w-4xl mx-auto">
             {[
               { step: '1', title: 'Drop your PDF', desc: 'Upload any syllabus from any class' },
-              { step: '2', title: 'AI analyzes it', desc: 'We extract dates, weights, topics, everything' },
-              { step: '3', title: 'Get your system', desc: 'Calendar, grade calc, and battle plan in 90 seconds' },
+              { step: '2', title: 'AI analyzes it', desc: 'We extract dates, weights, topics—everything' },
+              { step: '3', title: 'Get your system', desc: 'Calendar, grades, and battle plan in 90 seconds' },
             ].map((item, i) => (
               <div key={i} className="text-center">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-bold text-lg flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white font-bold text-xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/20">
                   {item.step}
                 </div>
-                <h3 className="font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-400 text-sm">{item.desc}</p>
+                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -315,9 +333,9 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1 }}
-          className="mt-24 max-w-2xl mx-auto"
+          className="mt-32 md:mt-40 max-w-2xl mx-auto"
         >
-          <h2 className="text-2xl font-bold text-center mb-8">Questions?</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10 tracking-tight">Questions?</h2>
           <div className="space-y-3">
             {[
               {
@@ -338,36 +356,34 @@ export default function Home() {
               },
             ].map((faq, i) => (
               <details key={i} className="group">
-                <summary className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/[0.04] transition-colors">
-                  <span className="font-medium">{faq.q}</span>
-                  <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <summary className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/[0.05] transition-colors">
+                  <span className="font-medium text-white">{faq.q}</span>
+                  <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </summary>
-                <p className="px-5 pb-5 pt-2 text-gray-400">{faq.a}</p>
+                <p className="px-5 pb-5 pt-3 text-gray-400 leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
         </motion.div>
 
         {/* Footer */}
-        <footer className="mt-24 text-center text-gray-500 text-sm pb-8">
-          <p>
+        <footer className="mt-32 md:mt-40 pt-10 border-t border-white/5 text-center text-gray-500 text-sm pb-8">
+          <p className="mb-6">
             Questions?{' '}
-            <a href="mailto:hello@syllaboom.com" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+            <a href="mailto:hello@syllaboom.com" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
               hello@syllaboom.com
             </a>
           </p>
-          <div className="mt-4 flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-6">
             <a href="/privacy" className="hover:text-gray-300 transition-colors">
               Privacy
             </a>
-            <span className="text-gray-700">•</span>
             <a href="/terms" className="hover:text-gray-300 transition-colors">
               Terms
             </a>
-            <span className="text-gray-700">•</span>
-            <span>© 2026 Syllaboom</span>
+            <span className="text-gray-600">© 2026 Syllaboom</span>
           </div>
         </footer>
       </main>

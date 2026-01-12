@@ -84,7 +84,7 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) processFile(file);
-  }, []);
+  }, [processFile]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -114,8 +114,8 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
         transition={{ duration: 0.2 }}
         className={`
           relative overflow-hidden
-          border-2 border-dashed rounded-2xl p-12 text-center transition-all cursor-pointer
-          ${isDragging ? 'bg-indigo-500/10' : 'bg-white/[0.02] hover:bg-white/[0.04]'}
+          border-2 border-dashed rounded-2xl p-8 sm:p-10 md:p-12 text-center transition-all cursor-pointer
+          ${isDragging ? 'bg-indigo-500/10 border-indigo-500' : 'bg-white/[0.02] hover:bg-white/[0.04] border-white/10'}
           ${disabled || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
         `}
       >
