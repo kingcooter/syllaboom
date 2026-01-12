@@ -32,13 +32,12 @@ export default function PricingToggle({ selected, onChange }: PricingToggleProps
           <div className="text-sm text-gray-400 mt-1">Single Class</div>
           <div className="text-xs text-indigo-400 mt-1">40% off</div>
 
-          {selected === 'single' && (
-            <motion.div
-              layoutId="pricing-indicator"
-              className="absolute inset-0 rounded-2xl ring-2 ring-indigo-500/50"
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            />
-          )}
+          {/* Selection indicator - using CSS transition instead of layoutId for better performance */}
+          <div
+            className={`absolute inset-0 rounded-2xl ring-2 ring-indigo-500/50 transition-opacity duration-200 ${
+              selected === 'single' ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
         </motion.button>
 
         {/* Semester Option */}
@@ -52,15 +51,11 @@ export default function PricingToggle({ selected, onChange }: PricingToggleProps
               : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
           }`}
         >
-          {/* Best Value Badge */}
+          {/* Best Value Badge - using CSS animation for better performance */}
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
-            >
+            <div className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 animate-pulse-subtle">
               BEST VALUE
-            </motion.div>
+            </div>
           </div>
 
           <div className="flex items-baseline justify-center gap-2">
@@ -75,13 +70,12 @@ export default function PricingToggle({ selected, onChange }: PricingToggleProps
             <span className="text-emerald-500">• 55% off</span>
           </div>
 
-          {selected === 'semester' && (
-            <motion.div
-              layoutId="pricing-indicator"
-              className="absolute inset-0 rounded-2xl ring-2 ring-emerald-500/50"
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            />
-          )}
+          {/* Selection indicator - using CSS transition instead of layoutId for better performance */}
+          <div
+            className={`absolute inset-0 rounded-2xl ring-2 ring-emerald-500/50 transition-opacity duration-200 ${
+              selected === 'semester' ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
         </motion.button>
       </div>
 

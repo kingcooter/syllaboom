@@ -11,6 +11,34 @@ interface TopicRoadmapProps {
   isPreview?: boolean;
 }
 
+// Extracted to module level to prevent recreation on every render
+const NODE_STYLES = {
+  final: {
+    node: 'bg-rose-900 border-rose-600 shadow-rose-900/50',
+    text: 'text-rose-100 font-bold',
+    badge: 'bg-rose-900/50 text-rose-200 border-rose-700',
+    glow: 'shadow-lg shadow-rose-900/30',
+  },
+  midterm: {
+    node: 'bg-red-600 border-red-400 shadow-red-600/50',
+    text: 'text-red-100 font-semibold',
+    badge: 'bg-red-500/20 text-red-300 border-red-500/50',
+    glow: 'shadow-lg shadow-red-500/20',
+  },
+  break: {
+    node: 'bg-gray-700 border-gray-500',
+    text: 'text-gray-300 italic',
+    badge: 'bg-gray-700/50 text-gray-400 border-gray-600',
+    glow: '',
+  },
+  normal: {
+    node: 'bg-white/10 border-white/20',
+    text: 'text-gray-200',
+    badge: 'bg-white/5 text-gray-400 border-white/10',
+    glow: '',
+  },
+} as const;
+
 export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, isPreview = false }: TopicRoadmapProps) {
   const PREVIEW_LIMIT = 4; // Show first 4 weeks in preview
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
@@ -72,35 +100,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
             const isExpanded = expandedWeek === weekPlan.week;
             const dangerInfo = getDangerZoneInfo(weekPlan.week);
 
-            // Style based on type
-            const nodeStyles = {
-              final: {
-                node: 'bg-rose-900 border-rose-600 shadow-rose-900/50',
-                text: 'text-rose-100 font-bold',
-                badge: 'bg-rose-900/50 text-rose-200 border-rose-700',
-                glow: 'shadow-lg shadow-rose-900/30',
-              },
-              midterm: {
-                node: 'bg-red-600 border-red-400 shadow-red-600/50',
-                text: 'text-red-100 font-semibold',
-                badge: 'bg-red-500/20 text-red-300 border-red-500/50',
-                glow: 'shadow-lg shadow-red-500/20',
-              },
-              break: {
-                node: 'bg-gray-700 border-gray-500',
-                text: 'text-gray-300 italic',
-                badge: 'bg-gray-700/50 text-gray-400 border-gray-600',
-                glow: '',
-              },
-              normal: {
-                node: 'bg-white/10 border-white/20',
-                text: 'text-gray-200',
-                badge: 'bg-white/5 text-gray-400 border-white/10',
-                glow: '',
-              },
-            };
-
-            const styles = nodeStyles[weekType];
+            const styles = NODE_STYLES[weekType];
 
             const isLastVisible = isPreview
               ? idx === Math.min(PREVIEW_LIMIT, weeks.length) - 1

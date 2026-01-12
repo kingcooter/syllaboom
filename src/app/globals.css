@@ -107,6 +107,17 @@ html {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Subtle pulse for badges - GPU accelerated */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
   background-size: 200% 100%;

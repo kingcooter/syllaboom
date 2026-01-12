@@ -270,7 +270,7 @@ export default function Home() {
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 + i * 0.1 }}
+              transition={{ duration: 0.4, delay: 0.1 + i * 0.05 }}
               className="card-hover p-6 rounded-2xl bg-white/[0.02] border border-white/5 group"
             >
               <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
