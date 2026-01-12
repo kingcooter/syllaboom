@@ -52,13 +52,35 @@ function ResultsContent() {
       // Check if coming from Stripe success or dev mode
       const sessionId = searchParams.get('session_id');
       const devMode = searchParams.get('dev') === 'true' && process.env.NODE_ENV === 'development';
+      const forceRegenerate = searchParams.get('regenerate') === 'true';
 
-      // Try to load existing guide from localStorage
-      const storedGuide = localStorage.getItem('studyGuide');
-      if (storedGuide) {
-        setGuide(JSON.parse(storedGuide));
-        setIsLoading(false);
-        return;
+      // Check if there's a pending syllabus to process
+      const hasPendingSyllabus = !!localStorage.getItem('pendingSyllabus');
+
+      // In dev mode with a pending syllabus, or with regenerate flag, skip cached guide
+      const shouldRegenerateGuide = (devMode && hasPendingSyllabus) || forceRegenerate;
+
+      // Try to load existing guide from localStorage (unless we should regenerate)
+      if (!shouldRegenerateGuide) {
+        const storedGuide = localStorage.getItem('studyGuide');
+        if (storedGuide) {
+          try {
+            const parsed = JSON.parse(storedGuide);
+            // Basic validation - ensure it has required fields
+            if (parsed && typeof parsed === 'object' && parsed.courseName) {
+              setGuide(parsed);
+              setIsLoading(false);
+              return;
+            } else {
+              // Invalid data structure - clear it
+              localStorage.removeItem('studyGuide');
+            }
+          } catch (parseError) {
+            // Corrupted localStorage data - clear it and let user regenerate
+            console.error('Failed to parse stored guide:', parseError);
+            localStorage.removeItem('studyGuide');
+          }
+        }
       }
 
       // If coming from payment OR dev mode, generate the guide
@@ -108,11 +130,27 @@ function ResultsContent() {
             }
 
             if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.error || 'Generation failed');
+              let errorMessage = 'Generation failed';
+              try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+              } catch {
+                // Response wasn't JSON - use default message
+              }
+              throw new Error(errorMessage);
             }
 
-            const newGuide = await response.json();
+            let newGuide;
+            try {
+              newGuide = await response.json();
+            } catch {
+              throw new Error('Invalid response from server');
+            }
+
+            // Validate guide has required structure
+            if (!newGuide || !newGuide.courseName) {
+              throw new Error('Generated guide is missing required data');
+            }
             const duration = Date.now() - startTime;
             analytics.guideGenerationCompleted(newGuide.courseCode || 'unknown', duration);
 

@@ -15,9 +15,23 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
   const PREVIEW_LIMIT = 4; // Show first 4 weeks in preview
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
 
-  const getAnalysis = (week: number) => topicAnalysis.find(t => t.week === week);
-  const isDangerZone = (week: number) => dangerZones.some(dz => dz.weeks.includes(week));
-  const getDangerZoneInfo = (week: number) => dangerZones.find(dz => dz.weeks.includes(week));
+  // Handle missing/undefined data gracefully
+  const weeks = weekByWeek || [];
+  const analysis = topicAnalysis || [];
+  const dangers = dangerZones || [];
+
+  // Early return if no data
+  if (weeks.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        <p>No weekly schedule available</p>
+      </div>
+    );
+  }
+
+  const getAnalysis = (week: number) => analysis.find(t => t.week === week);
+  const isDangerZone = (week: number) => dangers.some(dz => dz.weeks?.includes(week));
+  const getDangerZoneInfo = (week: number) => dangers.find(dz => dz.weeks?.includes(week));
 
   const getWeekType = (weekPlan: WeekPlan): 'normal' | 'midterm' | 'final' | 'break' => {
     const text = [...weekPlan.topics, ...weekPlan.assignments].join(' ').toLowerCase();
@@ -50,7 +64,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
       <div className="relative pl-2">
         {/* Weeks */}
         <div className="space-y-0">
-          {weekByWeek.slice(0, isPreview ? PREVIEW_LIMIT : undefined).map((weekPlan, idx) => {
+          {weeks.slice(0, isPreview ? PREVIEW_LIMIT : undefined).map((weekPlan, idx) => {
             const weekType = getWeekType(weekPlan);
             const mainTopic = getMainTopic(weekPlan);
             const inDangerZone = isDangerZone(weekPlan.week);
@@ -89,8 +103,8 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
             const styles = nodeStyles[weekType];
 
             const isLastVisible = isPreview
-              ? idx === Math.min(PREVIEW_LIMIT, weekByWeek.length) - 1
-              : idx === weekByWeek.length - 1;
+              ? idx === Math.min(PREVIEW_LIMIT, weeks.length) - 1
+              : idx === weeks.length - 1;
 
             return (
               <motion.div
@@ -135,7 +149,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
                     {/* Connector line below (except last visible) */}
                     {!isLastVisible && (
                       <div className={`w-0.5 flex-1 min-h-[2rem] ${
-                        inDangerZone || isDangerZone(weekByWeek[idx + 1]?.week)
+                        inDangerZone || isDangerZone(weeks[idx + 1]?.week)
                           ? 'bg-amber-500/60'
                           : 'bg-indigo-500/40'
                       }`} />
@@ -282,7 +296,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
         </div>
 
         {/* Locked Preview Section */}
-        {isPreview && weekByWeek.length > PREVIEW_LIMIT && (
+        {isPreview && weeks.length > PREVIEW_LIMIT && (
           <div className="relative mt-2">
             {/* Blurred locked weeks indicator */}
             <div className="relative rounded-2xl overflow-hidden">
@@ -291,7 +305,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
 
               {/* Faded content behind */}
               <div className="opacity-30 space-y-1 p-4">
-                {weekByWeek.slice(PREVIEW_LIMIT, PREVIEW_LIMIT + 3).map((weekPlan) => (
+                {weeks.slice(PREVIEW_LIMIT, PREVIEW_LIMIT + 3).map((weekPlan) => (
                   <div key={weekPlan.week} className="flex items-center gap-4 p-3">
                     <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20" />
                     <div className="flex-1">
@@ -305,7 +319,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
               {/* Locked message */}
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
                 <div className="text-4xl mb-3">🔒</div>
-                <p className="text-gray-300 font-medium">+{weekByWeek.length - PREVIEW_LIMIT} more weeks</p>
+                <p className="text-gray-300 font-medium">+{weeks.length - PREVIEW_LIMIT} more weeks</p>
                 <p className="text-gray-500 text-sm">Including midterms & final exam</p>
               </div>
             </div>
@@ -319,7 +333,7 @@ export default function TopicRoadmap({ weekByWeek, topicAnalysis, dangerZones, i
               <span className="text-2xl">🎓</span>
               <div>
                 <p className="font-semibold text-emerald-300">Course Complete</p>
-                <p className="text-sm text-gray-400">You&apos;ve conquered {weekByWeek.length} weeks</p>
+                <p className="text-sm text-gray-400">You&apos;ve conquered {weeks.length} weeks</p>
               </div>
             </div>
           </div>

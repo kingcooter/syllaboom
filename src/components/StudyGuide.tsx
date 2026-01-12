@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { StudyGuide as StudyGuideType } from '@/types';
 import CalendarView from './CalendarView';
@@ -53,18 +53,23 @@ export default function StudyGuide({ guide, isPreview = false }: StudyGuideProps
     return (weightedSum / totalWeight) * 100;
   }, [grades, guide.gradingBreakdown]);
 
-  // Check for grade milestone achievements
+  // Check for grade milestone achievements - use ref to prevent race conditions
+  const milestoneTriggeredRef = React.useRef<string | null>(null);
+
   useEffect(() => {
     if (calculatedGrade === null) return;
 
     let milestone = null;
-    if (calculatedGrade >= 90 && lastGradeMilestone !== 'A') milestone = 'A';
-    else if (calculatedGrade >= 80 && calculatedGrade < 90 && lastGradeMilestone !== 'B') milestone = 'B';
-    else if (calculatedGrade >= 70 && calculatedGrade < 80 && lastGradeMilestone !== 'C') milestone = 'C';
+    if (calculatedGrade >= 90) milestone = 'A';
+    else if (calculatedGrade >= 80) milestone = 'B';
+    else if (calculatedGrade >= 70) milestone = 'C';
 
-    if (milestone && milestone !== lastGradeMilestone) {
+    // Only trigger if this is a NEW milestone (not already triggered)
+    if (milestone && milestone !== milestoneTriggeredRef.current) {
+      milestoneTriggeredRef.current = milestone;
       setLastGradeMilestone(milestone);
-      // Trigger celebration for A grades
+
+      // Trigger celebration for A grades only
       if (milestone === 'A') {
         import('canvas-confetti').then((confetti) => {
           confetti.default({
@@ -73,10 +78,12 @@ export default function StudyGuide({ guide, isPreview = false }: StudyGuideProps
             origin: { y: 0.6 },
             colors: ['#10b981', '#34d399', '#6ee7b7'],
           });
+        }).catch(() => {
+          // Confetti failed to load - not critical, just skip
         });
       }
     }
-  }, [calculatedGrade, lastGradeMilestone]);
+  }, [calculatedGrade]);
 
   const handleGradeChange = (key: string, value: string) => {
     const numValue = value === '' ? null : Math.min(100, Math.max(0, parseFloat(value) || 0));

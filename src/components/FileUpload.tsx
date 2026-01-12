@@ -34,12 +34,27 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Failed to parse PDF');
+      if (!response.ok) {
+        let errorMsg = 'Failed to parse PDF';
+        try {
+          const errData = await response.json();
+          errorMsg = errData.error || errorMsg;
+        } catch {
+          // Response wasn't JSON
+        }
+        throw new Error(errorMsg);
+      }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('Invalid response from server');
+      }
+
       analytics.uploadCompleted(data.pageCount || 0, file.name);
 
-      // Trigger success confetti
+      // Trigger success confetti (non-blocking, ignore failures)
       import('canvas-confetti').then((confetti) => {
         confetti.default({
           particleCount: 80,
@@ -50,6 +65,8 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
           gravity: 1.2,
           scalar: 0.9,
         });
+      }).catch(() => {
+        // Confetti failed - not critical
       });
 
       onFileProcessed(data.text, file.name);

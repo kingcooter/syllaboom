@@ -39,10 +39,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(studyGuide);
   } catch (error) {
+    // Log full error server-side only
     console.error('Generation error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Return generic message to client - never expose internal error details
     return NextResponse.json(
-      { error: 'Failed to generate study guide. Please try again.', details: errorMessage },
+      { error: 'Failed to generate study guide. Please try again.' },
       { status: 500 }
     );
   }

@@ -247,9 +247,12 @@ export default function PrivacyPolicy() {
           </div>
 
           {/* Footer */}
-          <div className="mt-12 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
+          <div className="mt-12 pt-8 border-t border-white/10 flex justify-center gap-6 text-sm">
+            <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+              Terms of Service
+            </Link>
             <Link href="/" className="text-indigo-400 hover:text-indigo-300 transition-colors">
-              ← Back to Syllaboom
+              Back to Syllaboom
             </Link>
           </div>
         </motion.div>

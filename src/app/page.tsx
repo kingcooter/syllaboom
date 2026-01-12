@@ -203,20 +203,6 @@ export default function Home() {
                   >
                     See example first
                   </button>
-
-                  {/* Dev Mode Unlock - only in development */}
-                  {process.env.NODE_ENV === 'development' && (
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('pendingSyllabus', syllabusText!);
-                        localStorage.setItem('pendingFilename', filename || 'syllabus.pdf');
-                        window.location.href = '/results?dev=true';
-                      }}
-                      className="w-full py-3 rounded-2xl text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 transition-all"
-                    >
-                      🔓 Dev Mode: Skip Payment
-                    </button>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -381,7 +367,11 @@ export default function Home() {
           </p>
           <div className="mt-4 flex items-center justify-center gap-4">
             <a href="/privacy" className="hover:text-gray-300 transition-colors">
-              Privacy Policy
+              Privacy
+            </a>
+            <span className="text-gray-700">•</span>
+            <a href="/terms" className="hover:text-gray-300 transition-colors">
+              Terms
             </a>
             <span className="text-gray-700">•</span>
             <span>© 2026 Syllaboom</span>
