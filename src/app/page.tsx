@@ -187,6 +187,11 @@ export default function Home() {
           className="max-w-xl mx-auto"
         >
           <div className="glass rounded-3xl p-6 sm:p-8 md:p-10 border border-white/5 shadow-2xl">
+            {/* Pricing - moved above upload so users choose plan first */}
+            <div className="mb-8">
+              <PricingToggle selected={priceType} onChange={handlePriceChange} />
+            </div>
+
             {/* File Upload */}
             {canAddMore && (
               <FileUpload onFileProcessed={handleFileProcessed} />
@@ -254,11 +259,6 @@ export default function Home() {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Pricing */}
-            <div className="mt-8">
-              <PricingToggle selected={priceType} onChange={handlePriceChange} />
-            </div>
 
             {/* CTA Section */}
             <AnimatePresence>
