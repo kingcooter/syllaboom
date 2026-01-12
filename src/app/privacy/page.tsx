@@ -3,6 +3,9 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
+// Note: metadata must be in a separate file for client components
+// Using useEffect to set document.title as a workaround
+
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
