@@ -61,14 +61,15 @@ function ResultsContent() {
       const sessionId = searchParams.get('session_id');
       const devMode = searchParams.get('dev') === 'true' && process.env.NODE_ENV === 'development';
       const forceRegenerate = searchParams.get('regenerate') === 'true';
+      const isRetry = searchParams.get('retry') === 'true';
 
       // Check for pending syllabi (new array format) or legacy single syllabus
       const pendingSyllabiRaw = localStorage.getItem('pendingSyllabi');
       const legacySyllabusText = localStorage.getItem('pendingSyllabus');
       const hasPendingSyllabi = !!(pendingSyllabiRaw || legacySyllabusText);
 
-      // In dev mode with pending syllabi, or with regenerate flag, skip cached guides
-      const shouldRegenerateGuides = (devMode && hasPendingSyllabi) || forceRegenerate;
+      // In dev mode with pending syllabi, or with regenerate flag, or retrying, skip cached guides
+      const shouldRegenerateGuides = (devMode && hasPendingSyllabi) || forceRegenerate || isRetry;
 
       // Try to load existing guides from localStorage (unless we should regenerate)
       if (!shouldRegenerateGuides) {
@@ -108,10 +109,30 @@ function ResultsContent() {
         }
       }
 
-      // If coming from payment OR dev mode, generate the guides
-      if (sessionId || devMode) {
-        // Verify payment (skip in dev mode)
-        if (sessionId && !devMode) {
+      // Check for existing verified payment (allows retry after failure)
+      const storedPayment = localStorage.getItem('verifiedPayment');
+      let hasVerifiedPayment = false;
+      let paymentType: string | null = null;
+
+      if (storedPayment) {
+        try {
+          const payment = JSON.parse(storedPayment);
+          // Payment is valid for 24 hours
+          if (payment.verifiedAt && Date.now() - payment.verifiedAt < 24 * 60 * 60 * 1000) {
+            hasVerifiedPayment = true;
+            paymentType = payment.type;
+          } else {
+            localStorage.removeItem('verifiedPayment');
+          }
+        } catch {
+          localStorage.removeItem('verifiedPayment');
+        }
+      }
+
+      // If coming from payment OR dev mode OR has verified payment OR retrying, generate the guides
+      if (sessionId || devMode || hasVerifiedPayment || isRetry) {
+        // Verify payment (skip in dev mode or if already verified)
+        if (sessionId && !devMode && !hasVerifiedPayment) {
           try {
             const verifyResponse = await fetch('/api/verify-payment', {
               method: 'POST',
@@ -124,6 +145,15 @@ function ResultsContent() {
               setIsLoading(false);
               return;
             }
+            // Store verified payment for retry capability
+            const priceType = searchParams.get('type') || 'single';
+            localStorage.setItem('verifiedPayment', JSON.stringify({
+              sessionId,
+              type: priceType,
+              verifiedAt: Date.now(),
+            }));
+            hasVerifiedPayment = true;
+            paymentType = priceType;
           } catch {
             // Continue anyway if verification fails - benefit of doubt
             console.warn('Payment verification check failed, continuing...');
@@ -212,7 +242,20 @@ function ResultsContent() {
               }
               const errorMessage = err instanceof Error ? err.message : 'Unknown error';
               analytics.guideGenerationFailed(errorMessage);
-              setError(`Failed to generate study guide: ${errorMessage}. Please contact support.`);
+
+              // Save any successfully generated guides
+              if (generatedGuides.length > 0) {
+                localStorage.setItem('studyGuides', JSON.stringify(generatedGuides));
+                setGuides(generatedGuides);
+              }
+
+              // Update pending syllabi to only include remaining ones
+              const remainingSyllabi = syllabiToProcess.slice(i);
+              if (remainingSyllabi.length > 0) {
+                localStorage.setItem('pendingSyllabi', JSON.stringify(remainingSyllabi));
+              }
+
+              setError(`Failed to generate study guide: ${errorMessage}. ${generatedGuides.length > 0 ? `${generatedGuides.length} guide(s) saved. ` : ''}You can retry the remaining syllabi.`);
               setIsGenerating(false);
               setIsLoading(false);
               return;
@@ -324,10 +367,48 @@ function ResultsContent() {
   }
 
   if (error) {
+    const hasPendingSyllabi = !!localStorage.getItem('pendingSyllabi');
+    const hasVerifiedPayment = !!localStorage.getItem('verifiedPayment');
+    const canRetry = hasPendingSyllabi && hasVerifiedPayment;
+
     return (
-      <main className="container mx-auto px-4 py-16 text-center">
-        <div className="text-red-400 text-xl mb-4">⚠️ {error}</div>
-        <a href="/" className="text-blue-400 hover:underline">← Back to home</a>
+      <main className="min-h-screen bg-[#0a0a0f]">
+        <div className="container mx-auto px-4 py-16">
+          {/* Error message */}
+          <div className="max-w-xl mx-auto text-center mb-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p className="text-red-400 text-lg mb-6">{error}</p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {canRetry && (
+                <button
+                  onClick={() => window.location.href = '/results?retry=true'}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity"
+                >
+                  Retry Generation
+                </button>
+              )}
+              <a
+                href="/"
+                className="px-6 py-3 rounded-xl border border-white/10 text-gray-300 font-medium hover:bg-white/5 transition-colors"
+              >
+                ← Back to home
+              </a>
+            </div>
+          </div>
+
+          {/* Show any successfully generated guides */}
+          {guides.length > 0 && (
+            <div className="mt-8">
+              <p className="text-center text-gray-400 mb-4">Successfully generated {guides.length} guide(s):</p>
+              <StudyGuide guides={guides} isPreview={false} />
+            </div>
+          )}
+        </div>
       </main>
     );
   }

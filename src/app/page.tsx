@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import FileUpload from '@/components/FileUpload';
@@ -29,6 +29,28 @@ export default function Home() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [hasPendingPayment, setHasPendingPayment] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Check for existing verified payment with pending syllabi
+  useEffect(() => {
+    const storedPayment = localStorage.getItem('verifiedPayment');
+    const pendingSyllabi = localStorage.getItem('pendingSyllabi');
+
+    if (storedPayment && pendingSyllabi) {
+      try {
+        const payment = JSON.parse(storedPayment);
+        const syllabi = JSON.parse(pendingSyllabi);
+        // Payment valid for 24 hours
+        if (payment.verifiedAt && Date.now() - payment.verifiedAt < 24 * 60 * 60 * 1000 && syllabi.length > 0) {
+          setHasPendingPayment(true);
+          setPendingCount(syllabi.length);
+        }
+      } catch {
+        // Invalid data, ignore
+      }
+    }
+  }, []);
 
   const isValidEmail = EMAIL_REGEX.test(email);
   const maxSyllabi = SYLLABUS_LIMITS[priceType];
@@ -178,6 +200,38 @@ export default function Home() {
             </svg>
           </a>
         </motion.div>
+
+        {/* Pending Payment Banner */}
+        <AnimatePresence>
+          {hasPendingPayment && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-xl mx-auto mb-6"
+            >
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-center sm:text-left">
+                    <p className="text-emerald-400 font-medium">You have {pendingCount} syllab{pendingCount === 1 ? 'us' : 'i'} ready to process</p>
+                    <p className="text-sm text-gray-400">Your previous payment is still valid</p>
+                  </div>
+                  <a
+                    href="/results?retry=true"
+                    className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors text-sm"
+                  >
+                    Continue
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Main Card */}
         <motion.div
