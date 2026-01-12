@@ -251,22 +251,32 @@ export default function Home() {
               className="group"
             >
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] p-2.5 transition-all group-hover:border-indigo-500/30 group-hover:bg-white/[0.04]">
-                <div className="rounded-xl overflow-hidden shadow-2xl">
+                <div className="rounded-xl overflow-hidden shadow-2xl relative">
                   <Image
                     src="/syllaboom_class_notif_ical.png"
-                    alt="Class schedule exported to Apple Calendar"
+                    alt="Full course calendar with every class, exam, and assignment"
                     width={570}
                     height={490}
                     className="w-full h-auto"
                   />
                 </div>
               </div>
-              <div className="mt-3 text-center">
-                <div className="inline-flex items-center gap-2 text-sm font-medium text-white mb-0.5">
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-white">
                   <span className="text-base">📅</span>
-                  Class Schedule
+                  Full Course Calendar
                 </div>
-                <p className="text-gray-500 text-xs">Easy export to Apple Calendar</p>
+                <p className="text-gray-400 text-xs text-center leading-relaxed">
+                  Every class, exam & assignment — plug and play into Apple or Google Calendar
+                </p>
+                <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    One-click import
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    .ics file
+                  </span>
+                </div>
               </div>
             </motion.div>
 
@@ -278,22 +288,32 @@ export default function Home() {
               className="group"
             >
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] p-2.5 transition-all group-hover:border-emerald-500/30 group-hover:bg-white/[0.04]">
-                <div className="rounded-xl overflow-hidden shadow-2xl">
+                <div className="rounded-xl overflow-hidden shadow-2xl relative">
                   <Image
                     src="/syllaboom_grade_calculator.png"
-                    alt="Grade calculator exported to Google Sheets"
+                    alt="Grade calculator with auto-generated formulas in Google Sheets"
                     width={570}
                     height={490}
                     className="w-full h-auto"
                   />
                 </div>
               </div>
-              <div className="mt-3 text-center">
-                <div className="inline-flex items-center gap-2 text-sm font-medium text-white mb-0.5">
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-white">
                   <span className="text-base">📊</span>
-                  Grade Calculator
+                  Smart Grade Calculator
                 </div>
-                <p className="text-gray-500 text-xs">Easy export to Google Sheets</p>
+                <p className="text-gray-400 text-xs text-center leading-relaxed">
+                  Auto-generated formulas with your syllabus weights — just enter grades
+                </p>
+                <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Weighted formulas
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Google Sheets
+                  </span>
+                </div>
               </div>
             </motion.div>
 
@@ -305,22 +325,32 @@ export default function Home() {
               className="group"
             >
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] p-2.5 transition-all group-hover:border-violet-500/30 group-hover:bg-white/[0.04]">
-                <div className="rounded-xl overflow-hidden shadow-2xl">
+                <div className="rounded-xl overflow-hidden shadow-2xl relative">
                   <Image
                     src="/syllaboom_quiz_notif_ical.png"
-                    alt="Quiz reminders with alerts in Apple Calendar"
+                    alt="Built-in reminder alerts for quizzes and deadlines"
                     width={570}
                     height={490}
                     className="w-full h-auto"
                   />
                 </div>
               </div>
-              <div className="mt-3 text-center">
-                <div className="inline-flex items-center gap-2 text-sm font-medium text-white mb-0.5">
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-white">
                   <span className="text-base">🔔</span>
-                  Smart Reminders
+                  Built-in Reminders
                 </div>
-                <p className="text-gray-500 text-xs">Alerts before every deadline</p>
+                <p className="text-gray-400 text-xs text-center leading-relaxed">
+                  Automatic alerts before every quiz, exam & deadline — never miss a due date
+                </p>
+                <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                    2-day alerts
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                    Same-day alerts
+                  </span>
+                </div>
               </div>
             </motion.div>
           </div>
