@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
     const { priceType, email } = validation.data;
     const price = priceType === 'semester' ? PRICES.semester : PRICES.single;
 
+    // Ensure base URL has https:// scheme
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://syllaboom.com';
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `https://${baseUrl}`;
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -51,8 +57,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/results?session_id={CHECKOUT_SESSION_ID}&type=${priceType}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+      success_url: `${baseUrl}/results?session_id={CHECKOUT_SESSION_ID}&type=${priceType}`,
+      cancel_url: baseUrl,
       customer_email: email,
       allow_promotion_codes: true,
       metadata: {
