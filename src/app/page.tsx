@@ -248,7 +248,10 @@ export default function Home() {
 
             {/* File Upload */}
             {canAddMore && (
-              <FileUpload onFileProcessed={handleFileProcessed} />
+              <FileUpload
+                onFileProcessed={handleFileProcessed}
+                maxFiles={maxSyllabi - syllabi.length}
+              />
             )}
 
             {/* Uploaded syllabi list */}

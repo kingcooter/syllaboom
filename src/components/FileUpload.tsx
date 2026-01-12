@@ -7,37 +7,38 @@ import { analytics } from '@/lib/analytics';
 interface FileUploadProps {
   onFileProcessed: (text: string, filename: string) => void;
   disabled?: boolean;
+  maxFiles?: number; // How many more files can be added
 }
 
-export default function FileUpload({ onFileProcessed, disabled }: FileUploadProps) {
+export default function FileUpload({ onFileProcessed, disabled, maxFiles = 6 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingCount, setProcessingCount] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-  const processFile = async (file: File) => {
+  const processFile = async (file: File): Promise<boolean> => {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      setError('Please upload a PDF file');
+      setError(`${file.name}: Please upload a PDF file`);
       analytics.uploadFailed('invalid_file_type');
-      return;
+      return false;
     }
 
     if (file.size === 0) {
-      setError('File is empty');
+      setError(`${file.name}: File is empty`);
       analytics.uploadFailed('empty_file');
-      return;
+      return false;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError('File too large (max 10MB)');
+      setError(`${file.name}: File too large (max 10MB)`);
       analytics.uploadFailed('file_too_large');
-      return;
+      return false;
     }
 
     analytics.uploadStarted();
-    setIsProcessing(true);
-    setError(null);
 
     try {
       const formData = new FormData();
@@ -67,11 +68,54 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
       }
 
       analytics.uploadCompleted(data.pageCount || 0, file.name);
+      onFileProcessed(data.text, file.name);
+      return true;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setError(`${file.name}: ${errorMsg}`);
+      analytics.uploadFailed('parse_error');
+      console.error(err);
+      return false;
+    }
+  };
 
-      // Trigger success confetti (non-blocking, ignore failures)
+  const processFiles = async (files: File[]) => {
+    // Filter to only PDFs and limit to maxFiles
+    const pdfFiles = files
+      .filter(f => f.name.toLowerCase().endsWith('.pdf'))
+      .slice(0, maxFiles);
+
+    if (pdfFiles.length === 0) {
+      setError('Please upload PDF files');
+      return;
+    }
+
+    if (files.length > maxFiles) {
+      setError(`You can only upload ${maxFiles} more file${maxFiles === 1 ? '' : 's'}`);
+      return;
+    }
+
+    setIsProcessing(true);
+    setProcessingCount(pdfFiles.length);
+    setProcessedCount(0);
+    setError(null);
+
+    let successCount = 0;
+    for (const file of pdfFiles) {
+      const success = await processFile(file);
+      if (success) successCount++;
+      setProcessedCount(prev => prev + 1);
+    }
+
+    setIsProcessing(false);
+    setProcessingCount(0);
+    setProcessedCount(0);
+
+    // Trigger confetti if any succeeded
+    if (successCount > 0) {
       import('canvas-confetti').then((confetti) => {
         confetti.default({
-          particleCount: 80,
+          particleCount: 80 + (successCount * 20),
           spread: 60,
           origin: { y: 0.7 },
           colors: ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b'],
@@ -79,26 +123,16 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
           gravity: 1.2,
           scalar: 0.9,
         });
-      }).catch(() => {
-        // Confetti failed - not critical
-      });
-
-      onFileProcessed(data.text, file.name);
-    } catch (err) {
-      setError('Failed to process file. Please try again.');
-      analytics.uploadFailed('parse_error');
-      console.error(err);
-    } finally {
-      setIsProcessing(false);
+      }).catch(() => {});
     }
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  }, [processFile]);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) processFiles(files);
+  }, [maxFiles]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -111,8 +145,10 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
   }, []);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) processFiles(files);
+    // Reset input so same files can be selected again
+    e.target.value = '';
   };
 
   return (
@@ -141,6 +177,7 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
         <input
           type="file"
           accept=".pdf"
+          multiple
           onChange={handleFileInput}
           disabled={disabled || isProcessing}
           className="hidden"
@@ -172,13 +209,21 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
                     </svg>
                   </div>
                 </div>
-                <p className="text-gray-300 font-medium">Reading your syllabus...</p>
+                <p className="text-gray-300 font-medium">
+                  {processingCount > 1
+                    ? `Reading syllabi... (${processedCount + 1}/${processingCount})`
+                    : 'Reading your syllabus...'}
+                </p>
                 <div className="w-48 mx-auto">
                   <div className="progress-bar">
                     <motion.div
                       initial={{ width: '0%' }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 2, ease: 'easeInOut' }}
+                      animate={{
+                        width: processingCount > 1
+                          ? `${((processedCount + 0.5) / processingCount) * 100}%`
+                          : '100%'
+                      }}
+                      transition={{ duration: processingCount > 1 ? 0.3 : 2, ease: 'easeInOut' }}
                       className="progress-bar-fill"
                     />
                   </div>
@@ -219,10 +264,10 @@ export default function FileUpload({ onFileProcessed, disabled }: FileUploadProp
 
                 <div>
                   <p className="text-lg font-medium text-white mb-1">
-                    {isDragging ? 'Drop it here!' : 'Drop your syllabus'}
+                    {isDragging ? 'Drop them here!' : `Drop your syllab${maxFiles === 1 ? 'us' : 'i'}`}
                   </p>
                   <p className="text-sm text-gray-400">
-                    PDF format • Any class, any school
+                    PDF format • {maxFiles > 1 ? `Up to ${maxFiles} files` : 'Any class, any school'}
                   </p>
                 </div>
 
